@@ -1,0 +1,15 @@
+# Ignore build output
+bin/
+
+# executables
+*.exe
+
+# dynamic libraries
+*.dll
+
+# object files
+*.o
+*.obj
+
+# VS Code settings
+.vscode/
