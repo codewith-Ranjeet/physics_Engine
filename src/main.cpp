@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <optional>
+#include <iostream>
+using namespace std;
 
 // Constant acceleration applied every frame (downward force) #GRAVITY
 const float gravity = 0.3f;
@@ -7,16 +9,24 @@ const float gravity = 0.3f;
 int main()
 {
     // Create a window of size 800x600 with title
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "Test Window");
+    sf::RenderWindow window(sf::VideoMode({1200, 600}), "Test Window");
 
     // Limit FPS to 60
     window.setFramerateLimit(60);
 
     // ===================== PHYSICS STATE =====================
 
-    float velocityY = 0.0f; // Current vertical speed of the object
-    float groundY = 500.0f; // Y-position of ground
-    float radius = 50.0f;   // Radius of the circle
+    float velocityY = 0.0f;     // Current vertical speed of the object
+    float velocityX = 0.0f;     // Current horizontal speed of object
+    float radius = 50.0f;       // Radius of the circle
+    float groundY = 500.0f;     // Y-position of ground
+    float groundX = 800.0f - radius;     //length of ground
+    float movementSpeed = 1.0f; // movement speed of object
+    float friction = 0.85f;     // friction to slowdown object
+    struct objectPosition {
+        float positionX;
+        float positionY;
+    } objCircle;
 
     // ===================== OBJECT SETUP =====================
 
@@ -55,7 +65,7 @@ int main()
         float circleBottom = circle.getPosition().y + radius * 2;
 
         // Check if object is touching or below ground
-        bool onGround = (circleBottom >= groundY);
+        bool onGround = (circleBottom >= groundY) && (objCircle.positionX < groundX); //<-------------------need fixing
 
         // Jump input (only allowed when on ground)
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) ||
@@ -75,11 +85,18 @@ int main()
         =======================================================
         */
 
+        //position of object
+        objCircle.positionX = circle.getPosition().x;
+        objCircle.positionY = circle.getPosition().y;
+
         // Apply gravity (acceleration increases downward speed)
         velocityY += gravity;
 
+        // reduce horizontal speed due to friction
+        velocityX *= friction;
+
         // Move object based on current velocity
-        circle.move({0, velocityY});
+        circle.move({velocityX, velocityY});
 
         /*
         =======================================================
@@ -91,7 +108,7 @@ int main()
         // Recalculate bottom after movement
         circleBottom = circle.getPosition().y + radius * 2;
 
-        if (circleBottom >= groundY)
+        if (circleBottom >= groundY && objCircle.positionX < groundX)   //<---------------------------need fixing
         {
             // Snap object exactly onto ground (prevent sinking)
             circle.setPosition({circle.getPosition().x, groundY - radius * 2});
@@ -107,10 +124,14 @@ int main()
         */
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
-            circle.move({2, 0}); // Move right
+        {
+            velocityX += movementSpeed;
+        }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
-            circle.move({-2, 0}); // Move left
+        {
+            velocityX -= movementSpeed;
+        }
 
         /*
         =======================================================
