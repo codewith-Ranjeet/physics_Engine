@@ -15,15 +15,16 @@ int main()
     window.setFramerateLimit(60);
 
     // ===================== PHYSICS STATE =====================
-
-    float velocityY = 0.0f;     // Current vertical speed of the object
-    float velocityX = 0.0f;     // Current horizontal speed of object
     float radius = 50.0f;       // Radius of the circle
-    float groundY = 500.0f;     // Y-position of ground
-    float groundX = 800.0f - radius;     //length of ground
+    float velocityX = 0.0f;     // Current horizontal speed of object
+    float velocityY = 0.0f;     // Current vertical speed of the object
+    float groundX = 0.0f;       // X-position of ground
+    float groundY = 400.0f;     // Y-position of ground
+    float prevY = 0.0f;         // store previous frame positionY of object
+    float groundWidth = 800.0f; // length of ground
     float movementSpeed = 1.0f; // movement speed of object
     float friction = 0.85f;     // friction to slowdown object
-    struct objectPosition {
+    struct objectPosition {     // object structure
         float positionX;
         float positionY;
     } objCircle;
@@ -40,7 +41,7 @@ int main()
     // Create ground as a thin rectangle
     sf::RectangleShape rectangle({800, 5});
     rectangle.setFillColor(sf::Color::Green);
-    rectangle.setPosition({0, 500});
+    rectangle.setPosition({groundX, groundY});
 
     // ===================== MAIN LOOP =====================
 
@@ -61,11 +62,12 @@ int main()
         =======================================================
         */
 
+        bool withinGround = (objCircle.positionX + radius * 2) <= groundWidth;
         // Calculate bottom of circle (needed for collision with ground)
         float circleBottom = circle.getPosition().y + radius * 2;
 
         // Check if object is touching or below ground
-        bool onGround = (circleBottom >= groundY) && (objCircle.positionX < groundX); //<-------------------need fixing
+        bool onGround = (circleBottom >= groundY) && (objCircle.positionX < groundWidth); //<-------------------need fixing
 
         // Jump input (only allowed when on ground)
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) ||
@@ -84,6 +86,9 @@ int main()
         - Update position
         =======================================================
         */
+        //position of ground (for future use when ground is not straight)
+        groundX = rectangle.getPosition().x;
+        groundY = rectangle.getPosition().y;
 
         //position of object
         objCircle.positionX = circle.getPosition().x;
@@ -108,7 +113,7 @@ int main()
         // Recalculate bottom after movement
         circleBottom = circle.getPosition().y + radius * 2;
 
-        if (circleBottom >= groundY && objCircle.positionX < groundX)   //<---------------------------need fixing
+        if (circleBottom >= groundY && objCircle.positionX < groundWidth && prevY + radius * 2 <= groundY)
         {
             // Snap object exactly onto ground (prevent sinking)
             circle.setPosition({circle.getPosition().x, groundY - radius * 2});
@@ -132,6 +137,14 @@ int main()
         {
             velocityX -= movementSpeed;
         }
+
+        /*
+        =======================================================
+        PHYSICS PHASE 2
+        - update previous frame values
+        =======================================================
+        */
+        prevY = objCircle.positionY;
 
         /*
         =======================================================
