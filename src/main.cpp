@@ -80,20 +80,10 @@ int main()
         world.update();
 
         // ---------- SYNC RENDER ----------
-        playerShape.setPosition({world.objects[0].x,
-                                 world.objects[0].y});
+        playerShape.setPosition({world.objects[0].x, world.objects[0].y});
+        groundShape.setPosition({world.objects[1].x, world.objects[1].y});
 
-        groundShape.setPosition({world.objects[1].x,
-                                 world.objects[1].y});
-
-        /*
-        =======================================================
-        RENDER PHASE
-        - Clear previous frame
-        - Draw objects
-        - Display final frame
-        =======================================================
-        */
+        // ---------- RENDER ----------
 
         window.clear(sf::Color::Black); // Clear screen with black
 

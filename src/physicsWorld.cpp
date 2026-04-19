@@ -25,7 +25,7 @@ void physicsWorld::update()
     physicsObject &player = objects[0];
     physicsObject &ground = objects[1];
 
-    player.movementSpeed = 1.0f;
+    player.movementSpeed = 1.0f; 
     player.isGrounded = false;
 
     float playerBottom = player.y + player.y + player.height;
