@@ -1,10 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <optional>
-#include <iostream>
+#include "physicsWorld.h"
 using namespace std;
-
-// Constant acceleration applied every frame (downward force) #GRAVITY
-const float gravity = 0.3f;
 
 int main()
 {
@@ -14,34 +11,41 @@ int main()
     // Limit FPS to 60
     window.setFramerateLimit(60);
 
-    // ===================== PHYSICS STATE =====================
-    float radius = 50.0f;       // Radius of the circle
-    float velocityX = 0.0f;     // Current horizontal speed of object
-    float velocityY = 0.0f;     // Current vertical speed of the object
-    float groundX = 0.0f;       // X-position of ground
-    float groundY = 400.0f;     // Y-position of ground
-    float prevY = 0.0f;         // store previous frame positionY of object
-    float groundWidth = 800.0f; // length of ground
-    float movementSpeed = 1.0f; // movement speed of object
-    float friction = 0.85f;     // friction to slowdown object
-    struct objectPosition {     // object structure
-        float positionX;
-        float positionY;
-    } objCircle;
+    // ---------- WORLD ----------
+    physicsWorld world;
 
-    // ===================== OBJECT SETUP =====================
+    // ---------- player ----------
+    physicsObject player;
+    player.x = 200.0f;
+    player.y = 200.0f;
+    player.height = 100.0f;
+    player.width = 100.0f;
+    player.radius = 50.0f;
 
-    // Create a circular object (our "player")
-    sf::CircleShape circle(radius);
-    circle.setFillColor(sf::Color::Red);
+    // ---------- Ground ----------
+    physicsObject ground;
+    ground.x = 0.0f;
+    ground.y = 500.0f;
+    ground.height = 5.0f;
+    ground.width = 800.0f;
+    ground.isStatic = true;
 
-    // Initial position (top-left of bounding box)
-    circle.setPosition({200, 200});
+    // Add to World
+    world.objects.push_back(player);
+    world.objects.push_back(ground);
 
-    // Create ground as a thin rectangle
-    sf::RectangleShape rectangle({800, 5});
-    rectangle.setFillColor(sf::Color::Green);
-    rectangle.setPosition({groundX, groundY});
+    // SFML Shape Display
+    // player
+    sf::CircleShape playerShape(player.radius);
+    playerShape.setFillColor(sf::Color::Red);
+
+    // Initial position of player (top-left of bounding box)
+    playerShape.setPosition({player.x, player.y});
+
+    // ground
+    sf::RectangleShape groundShape({ground.width, ground.height});
+    groundShape.setFillColor(sf::Color::Green);
+    groundShape.setPosition({ground.x, ground.y});
 
     // ===================== MAIN LOOP =====================
 
@@ -54,97 +58,33 @@ int main()
                 window.close();
         }
 
-        /*
-        =======================================================
-        INPUT PHASE
-        - Read user input
-        - Decide what changes should happen (e.g., jump)
-        =======================================================
-        */
-
-        bool withinGround = (objCircle.positionX + radius * 2) <= groundWidth;
-        // Calculate bottom of circle (needed for collision with ground)
-        float circleBottom = circle.getPosition().y + radius * 2;
-
-        // Check if object is touching or below ground
-        bool onGround = (circleBottom >= groundY) && (objCircle.positionX < groundWidth); //<-------------------need fixing
-
-        // Jump input (only allowed when on ground)
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) ||
-             sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) &&
-            onGround)
-        {
-            // Apply upward impulse (negative Y = up)
-            velocityY = -8.0f;
-        }
-
-        /*
-        =======================================================
-        PHYSICS PHASE
-        - Apply forces (gravity)
-        - Update velocity
-        - Update position
-        =======================================================
-        */
-        //position of ground (for future use when ground is not straight)
-        groundX = rectangle.getPosition().x;
-        groundY = rectangle.getPosition().y;
-
-        //position of object
-        objCircle.positionX = circle.getPosition().x;
-        objCircle.positionY = circle.getPosition().y;
-
-        // Apply gravity (acceleration increases downward speed)
-        velocityY += gravity;
-
-        // reduce horizontal speed due to friction
-        velocityX *= friction;
-
-        // Move object based on current velocity
-        circle.move({velocityX, velocityY});
-
-        /*
-        =======================================================
-        COLLISION PHASE
-        - Fix object if it intersects ground
-        =======================================================
-        */
-
-        // Recalculate bottom after movement
-        circleBottom = circle.getPosition().y + radius * 2;
-
-        if (circleBottom >= groundY && objCircle.positionX < groundWidth && prevY + radius * 2 <= groundY)
-        {
-            // Snap object exactly onto ground (prevent sinking)
-            circle.setPosition({circle.getPosition().x, groundY - radius * 2});
-            // Stop downward velocity
-            velocityY = 0;
-        }
-
-        /*
-        =======================================================
-        HORIZONTAL MOVEMENT (INPUT + DIRECT POSITION CHANGE)
-        Note: This bypasses physics (need to be fixed using velocityX)
-        =======================================================
-        */
+        // ---------- INPUT ----------
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
         {
-            velocityX += movementSpeed;
+            world.objects[0].velocityX += world.objects[0].movementSpeed;
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
         {
-            velocityX -= movementSpeed;
+            world.objects[0].velocityX -= world.objects[0].movementSpeed;
+        }
+        // Jump input (only allowed when on ground)
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+        {
+            // Apply upward impulse (negative Y = up)
+            world.objects[0].velocityY = -8.0f;
         }
 
-        /*
-        =======================================================
-        PHYSICS PHASE 2
-        - update previous frame values
-        =======================================================
-        */
-        prevY = objCircle.positionY;
+        // ---------- World Update ----------
+        world.update();
+
+        // ---------- SYNC RENDER ----------
+        playerShape.setPosition({world.objects[0].x,
+                                 world.objects[0].y});
+
+        groundShape.setPosition({world.objects[1].x,
+                                 world.objects[1].y});
 
         /*
         =======================================================
@@ -157,8 +97,8 @@ int main()
 
         window.clear(sf::Color::Black); // Clear screen with black
 
-        window.draw(rectangle); // Draw ground
-        window.draw(circle);    // Draw player (circle)
+        window.draw(groundShape); // Draw ground
+        window.draw(playerShape); // Draw player (circle)
 
         window.display(); // Present frame to screen
     }
