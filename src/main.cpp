@@ -20,7 +20,6 @@ int main()
     player.y = 200.0f;
     player.height = 100.0f;
     player.width = 100.0f;
-    player.radius = 50.0f;
 
     // ---------- Ground ----------
     physicsObject ground;
@@ -36,7 +35,7 @@ int main()
 
     // SFML Shape Display
     // player
-    sf::CircleShape playerShape(player.radius);
+    sf::CircleShape playerShape(50);
     playerShape.setFillColor(sf::Color::Red);
 
     // Initial position of player (top-left of bounding box)
@@ -70,7 +69,7 @@ int main()
             world.objects[0].velocityX -= world.objects[0].movementSpeed;
         }
         // Jump input (only allowed when on ground)
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && world.objects[0].isGrounded))
         {
             // Apply upward impulse (negative Y = up)
             world.objects[0].velocityY = -8.0f;

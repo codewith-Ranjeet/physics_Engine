@@ -1,4 +1,5 @@
 #include "physicsWorld.h"
+#include <SFML/Graphics.hpp>
 
 void physicsWorld::update()
 {
@@ -16,7 +17,7 @@ void physicsWorld::update()
         // apply friction
         obj.velocityX *= friction;
 
-        // update position
+        // update position (postion using velocity)
         obj.x += obj.velocityX;
         obj.y += obj.velocityY;
     }
@@ -28,7 +29,7 @@ void physicsWorld::update()
     player.movementSpeed = 1.0f; 
     player.isGrounded = false;
 
-    float playerBottom = player.y + player.y + player.height;
+    float playerBottom = player.y + player.height;
     if (playerBottom >= ground.y && (player.prevY + player.height) <= ground.y && player.x < ground.width)
     {
         player.y = ground.y - player.height;
