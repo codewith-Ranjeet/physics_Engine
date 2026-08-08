@@ -1,7 +1,7 @@
-#include "physicsWorld.h"
+#include "PhysicsWorld.h"
 #include <SFML/Graphics.hpp>
 
-void physicsWorld::update()
+void PhysicsWorld::update()
 {
     for (auto &obj : objects)
     {
@@ -12,6 +12,7 @@ void physicsWorld::update()
         obj.prevY = obj.y;
 
         // apply gravity
+        
         obj.velocityY += gravity;
 
         // apply friction
@@ -23,16 +24,16 @@ void physicsWorld::update()
     }
 
     // ---------- Collision (simple ground for now) ----------
-    physicsObject &player = objects[0];
-    physicsObject &ground = objects[1];
+    PhysicsObject &player = objects[0];
+    PhysicsObject &ground = objects[1];
 
     player.movementSpeed = 1.0f; 
     player.isGrounded = false;
 
-    float playerBottom = player.y + player.height;
-    if (playerBottom >= ground.y && (player.prevY + player.height) <= ground.y && player.x < ground.width)
+    float playerBottom = player.y + player.collider.radius;
+    if (playerBottom >= ground.y && (player.prevY + player.collider.radius) <= ground.y && player.x < ground.collider.width)
     {
-        player.y = ground.y - player.height;
+        player.y = ground.y - player.collider.radius;
         player.velocityY = 0;
         player.isGrounded = true;
     }
